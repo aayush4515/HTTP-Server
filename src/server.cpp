@@ -95,16 +95,13 @@ int main(int argc, char **argv) {
   char buffer[4096] = {0};
   recv(client_fd, buffer, sizeof(buffer) - 1, 0);
 
-  std::string bufferStr = "";
-  for (int i = 0; i < 4095; i ++) {
-    bufferStr += buffer[i];
-  }
+  std::string bufferStr(buffer);
 
   // display bufferStr
   std::cout << "Buffer string is: " << bufferStr << std::endl << std::endl;
 
   int pos1 = bufferStr.find('/');
-  int pos2 = bufferStr.find('H');
+  int pos2 = bufferStr.find(' ', pos1);
 
   std::string reqString = bufferStr.substr(pos1 + 1, pos2 - pos1 - 1);
   std::string rootStr = "";
