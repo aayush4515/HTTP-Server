@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
   if (isEcho) {
     response = "HTTP/1.1 200 OK\r\n\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n\r\n" + contentStr;
     send(client_fd, response.c_str(), strlen(response.c_str()), 0);
-    cout << "isEcho block got executed!!!" << std::endl << std::endl;
+    std::cout << "isEcho block got executed!!!" << std::endl << std::endl;
   }
   else if (reqString == rootStr) {
     response = "HTTP/1.1 200 OK\r\n\r\n";
