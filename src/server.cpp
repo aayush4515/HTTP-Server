@@ -75,9 +75,6 @@ int main(int argc, char **argv) {
   // stores first six characters of the request strings
   char* reqSubStr = "";
 
-  // display the request sub string
-  std:: cout << "The request sub-string is: " << reqSubStr << std::endl << std::endl;
-
   // actual first six characters to send a 200 OK
   char* actualStr = "GET / ";
 
@@ -85,6 +82,9 @@ int main(int argc, char **argv) {
   for (int i = 0; i < 6; i++) {
     reqSubStr += buffer[0];
   }
+
+  // display the request sub string
+  std:: cout << "The request sub-string is: " << reqSubStr << std::endl << std::endl;
 
   if (reqSubStr == actualStr) {
     send(client_fd, "HTTP/1.1 200 OK\r\n\r\n", strlen("HTTP/1.1 200 OK\r\n\r\n"), 0);
