@@ -65,14 +65,16 @@ int main(int argc, char **argv) {
   // Send the response
   // send(client_fd, response, strlen(response), 0);
 
-  // buffer stored the HTTP request strinf
+  /*
+
+  // buffer stored the HTTP request string
   char buffer[4096] = {0};
 
   // receives the HTTP request and stores in buffer
   recv(client_fd, buffer, sizeof(buffer) - 1, 0);
 
-  // display the request string
-  std:: cout << "The request string is: " << buffer << std::endl << std::endl;
+  // display the request string for debugging
+  // std:: cout << "The request string is: " << buffer << std::endl << std::endl;
 
   // stores first six characters of the request strings
   std::string reqSubStr = "";
@@ -85,10 +87,26 @@ int main(int argc, char **argv) {
     reqSubStr += buffer[i];
   }
 
-  // display the request sub string
-  std:: cout << "The request sub-string is: " << reqSubStr << std::endl << std::endl;
+  // display the request sub string for debugging
+  // std:: cout << "The request sub-string is: " << reqSubStr << std::endl << std::endl;
 
-  if (reqSubStr == actualStr) {
+  */
+
+  char buffer[4096] = {0};
+  recv(client_fd, buffer, sizeof(buffer) - 1, 0);
+
+  std::string bufferStr = "";
+  for (int i = 0; i < 4095; i ++) {
+    bufferStr += buffer[i];
+  }
+
+  int pos1 = bufferStr.find('/');
+  int pos2 = bufferStr.find('H');
+
+  std::string reqString = bufferStr.substr(pos1 + 1, pos2 - pos1 - 1);
+  std::string rootStr = "";
+
+  if (reqString == rootStr) {
     send(client_fd, "HTTP/1.1 200 OK\r\n\r\n", strlen("HTTP/1.1 200 OK\r\n\r\n"), 0);
   }
   else {
