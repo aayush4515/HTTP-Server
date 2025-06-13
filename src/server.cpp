@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
 
   // use a loop to parse the request string's first six characters
   for (int i = 0; i < 6; i++) {
-    reqSubStr += buffer[0];
+    reqSubStr += buffer[i];
   }
 
   // display the request sub string
