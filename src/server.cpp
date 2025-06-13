@@ -58,10 +58,12 @@ int main(int argc, char **argv) {
   int client_fd = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
   std::cout << "Client connected\n";
 
+  // The following was for the challenge "Respond with 200"
+
   // Response to be sent to the client
-  const char* response = "HTTP/1.1 200 OK\r\n\r\n";
+  // const char* response = "HTTP/1.1 200 OK\r\n\r\n";
   // Send the response
-  send(client_fd, response, strlen(response), 0);
+  // send(client_fd, response, strlen(response), 0);
 
   // buffer stored the HTTP request strinf
   char buffer[4096] = {0};
@@ -73,10 +75,10 @@ int main(int argc, char **argv) {
   std:: cout << "The request string is: " << buffer << std::endl << std::endl;
 
   // stores first six characters of the request strings
-  char* reqSubStr = "";
+  std::string reqSubStr = "";
 
   // actual first six characters to send a 200 OK
-  char* actualStr = "GET / ";
+  std::string actualStr = "GET / ";
 
   // use a loop to parse the request string's first six characters
   for (int i = 0; i < 6; i++) {
@@ -86,7 +88,7 @@ int main(int argc, char **argv) {
   // display the request sub string
   std:: cout << "The request sub-string is: " << reqSubStr << std::endl << std::endl;
 
-  if (strcmp(reqSubStr, actualStr) == 0) {
+  if (reqSubStr == actualStr) {
     send(client_fd, "HTTP/1.1 200 OK\r\n\r\n", strlen("HTTP/1.1 200 OK\r\n\r\n"), 0);
   }
   else {
