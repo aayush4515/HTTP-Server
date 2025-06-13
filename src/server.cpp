@@ -65,56 +65,66 @@ int main(int argc, char **argv) {
   // Send the response
   // send(client_fd, response, strlen(response), 0);
 
-  /*
-
-  // buffer stored the HTTP request string
+  // buffer stores the HTTP request string
   char buffer[4096] = {0};
-
   // receives the HTTP request and stores in buffer
   recv(client_fd, buffer, sizeof(buffer) - 1, 0);
 
-  // display the request string for debugging
-  // std:: cout << "The request string is: " << buffer << std::endl << std::endl;
-
-  // stores first six characters of the request strings
-  std::string reqSubStr = "";
-
-  // actual first six characters to send a 200 OK
-  std::string actualStr = "GET / ";
-
-  // use a loop to parse the request string's first six characters
-  for (int i = 0; i < 6; i++) {
-    reqSubStr += buffer[i];
-  }
-
-  // display the request sub string for debugging
-  // std:: cout << "The request sub-string is: " << reqSubStr << std::endl << std::endl;
-
-  */
-
-  char buffer[4096] = {0};
-  recv(client_fd, buffer, sizeof(buffer) - 1, 0);
-
+  // converts char array to string
   std::string bufferStr(buffer);
 
-  // display bufferStr
-  std::cout << "Buffer string is: " << bufferStr << std::endl << std::endl;
-
+  // positions between which the substring lies
   int pos1 = bufferStr.find('/');
   int pos2 = bufferStr.find(' ', pos1);
+  // finds the second '/'
+  int pos3 = bufferStr.find('/', pos1 + 1);
 
+  // find the substring after '/'
   std::string reqString = bufferStr.substr(pos1 + 1, pos2 - pos1 - 1);
+
+  // checks if it's an echo request by finding the "echo" string
+  bool isEcho = false;
+  std::string tempStr = "";
+  std::string echoStr = "";
+  if (pos3 != std::string::npos) {
+    echoStr = bufferStr.substr(pos1 + 1, pos3 - pos1 -1);
+  }
+  if (echoStr == "echo") {
+    isEcho = true;
+  }
+
+  // empty string, if there is nothing after '/', return OK
   std::string rootStr = "";
 
-  // display reqString
-  std::cout << "Request string is: " << reqString << std::endl << std::endl;
+  // extract the string after echo/
+  std::string contentStr = bufferStr.substr(pos3 + 1, pos2 - pos3 -1);
 
+  // if there is a space after '/', send OK
+  std::string response = "";
   if (reqString == rootStr) {
-    send(client_fd, "HTTP/1.1 200 OK\r\n\r\n", strlen("HTTP/1.1 200 OK\r\n\r\n"), 0);
+    response = "HTTP/1.1 200 OK\r\n\r\n";
+    send(client_fd, response.c_str(), strlen(response.c_str()), 0);
   }
+  else if (isEcho) {
+    response = "HTTP/1.1 200 OK\r\n\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n\r\n" + contentStr;
+    send(client_fd, response.c_str(), strlen(response.c_str()), 0);
+  }
+  // else, send the error message
   else {
-    send(client_fd, "HTTP/1.1 404 Not Found\r\n\r\n", strlen("HTTP/1.1 404 Not Found\r\n\r\n"), 0);
+    response = "HTTP/1.1 404 Not Found\r\n\r\n";
+    send(client_fd, response.c_str(), strlen(response.c_str()), 0);
   }
+
+  // debug prints
+
+  // pos1 and pos3
+  std::cout << "Pos1: " << pos1 << " Pos3: " << pos3 << std::endl << std::endl;
+
+  // echo string
+  std::cout << "the echo string is: " << echoStr << std::endl << std::endl;
+
+  // echo bool
+  std::cout << "echo bool is(expected true): " << isEcho << std::endl << std::endl;
 
   close(server_fd);
 
