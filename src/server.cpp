@@ -100,6 +100,9 @@ int main(int argc, char **argv) {
     bufferStr += buffer[i];
   }
 
+  // display bufferStr
+  std::cout << "Buffer string is: " << bufferStr << std::end << std::endl;
+
   int pos1 = bufferStr.find('/');
   int pos2 = bufferStr.find('H');
 
