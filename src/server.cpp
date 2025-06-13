@@ -63,6 +63,15 @@ int main(int argc, char **argv) {
   // Send the response
   send(client_fd, response, strlen(response), 0);
 
+  // buffer stored the HTTP request strinf
+  char buffer[4096] = {0};
+
+  // receives the HTTP request and stores in buffer
+  recv(client_fd, buffer, sizeof(buffer) - 1, 0);
+
+  // display the request string
+  std:: cout << "The request string is: " << buffer << std::endl << std::endl;
+
   close(server_fd);
 
   return 0;
