@@ -101,12 +101,13 @@ int main(int argc, char **argv) {
 
   // if there is a space after '/', send OK
   std::string response = "";
-  if (reqString == rootStr) {
-    response = "HTTP/1.1 200 OK\r\n\r\n";
+
+  if (isEcho) {
+    response = "HTTP/1.1 200 OK\r\n\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n\r\n" + contentStr;
     send(client_fd, response.c_str(), strlen(response.c_str()), 0);
   }
-  else if (isEcho) {
-    response = "HTTP/1.1 200 OK\r\n\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n\r\n" + contentStr;
+  else if (reqString == rootStr) {
+    response = "HTTP/1.1 200 OK\r\n\r\n";
     send(client_fd, response.c_str(), strlen(response.c_str()), 0);
   }
   // else, send the error message
