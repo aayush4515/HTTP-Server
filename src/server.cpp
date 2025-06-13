@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
   std::string response = "";
 
   if (isEcho) {
-    response = "HTTP/1.1 200 OK\r\n\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n\r\n" + contentStr;
+    response = "HTTP/1.1 200 OK\r\n\Content-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n\r\n" + contentStr;
     send(client_fd, response.c_str(), strlen(response.c_str()), 0);
     std::cout << "isEcho block got executed!!!" << std::endl << std::endl;
   }
