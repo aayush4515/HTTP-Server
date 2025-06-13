@@ -109,6 +109,9 @@ int main(int argc, char **argv) {
   std::string reqString = bufferStr.substr(pos1 + 1, pos2 - pos1 - 1);
   std::string rootStr = "";
 
+  // display reqString
+  std::cout << "Request string is: " << reqString << std::endl << std::endl;
+
   if (reqString == rootStr) {
     send(client_fd, "HTTP/1.1 200 OK\r\n\r\n", strlen("HTTP/1.1 200 OK\r\n\r\n"), 0);
   }
