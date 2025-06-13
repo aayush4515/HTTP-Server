@@ -72,6 +72,27 @@ int main(int argc, char **argv) {
   // display the request string
   std:: cout << "The request string is: " << buffer << std::endl << std::endl;
 
+  // stores first six characters of the request strings
+  char* reqSubStr = "";
+
+  // display the request sub string
+  std:: cout << "The request sub-string is: " << reqSubStr << std::endl << std::endl;
+
+  // actual first six characters to send a 200 OK
+  char* actualStr = "GET / ";
+
+  // use a loop to parse the request string's first six characters
+  for (int i = 0; i < 6; i++) {
+    reqSubStr += buffer[0];
+  }
+
+  if (reqSubStr == actualStr) {
+    send(client_fd, "HTTP/1.1 200 OK\r\n\r\n", strlen("HTTP/1.1 200 OK\r\n\r\n"), 0);
+  }
+  else {
+    send(client_fd, "HTTP/1.1 404 Not Found\r\n\r\n", strlen("HTTP/1.1 404 Not Found\r\n\r\n"), 0);
+  }
+
   close(server_fd);
 
   return 0;
