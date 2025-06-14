@@ -108,7 +108,8 @@ int main(int argc, char **argv) {
   // extract the string after echo/
   std::string contentStr = bufferStr.substr(pos3 + 1, pos2 - pos3 -1);
 
-  // Extracts the string after 'User-Agent:' header
+  // extracts the string after 'User-Agent:' header
+  std::string userAgentContent = "";
 
   // stores the first occurence of the string "User-Agent"
   int pos4 = bufferStr.find("User-Agent:");
@@ -116,7 +117,7 @@ int main(int argc, char **argv) {
   int pos5 = bufferStr.find(' ', pos4);
   // stores the content of the user-agent header
   if (pos4 != std::string::npos && pos5 != std::string::npos) {
-    std::string userAgentContent = bufferStr.substr(pos4 + 1, pos5 - pos4 - 1);
+    userAgentContent = bufferStr.substr(pos4 + 1, pos5 - pos4 - 1);
   }
 
   // if there is a space after '/', send OK
@@ -127,7 +128,7 @@ int main(int argc, char **argv) {
     send(client_fd, response.c_str(), strlen(response.c_str()), 0);
   }
   else if (isUserAgent) {
-    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(userAgentStr.length()) + "\r\n\r\n" + userAgentStr;
+    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(userAgentContent.length()) + "\r\n\r\n" + userAgentContent;
     send(client_fd, response.c_str(), strlen(response.c_str()), 0);
   }
   else if (reqString == rootStr) {
