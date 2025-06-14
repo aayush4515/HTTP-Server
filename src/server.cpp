@@ -151,7 +151,13 @@ void handleClient(int client_fd) {
     // check if it is a file request
     if (isFileRequest) {
       // extract content to add to the file from the request stirng
-      //std::string fileContent = bufferStr.substr();
+
+      int startIdx = bufferStr.find_last_of("\r\n");
+      int endIdx = bufferStr.length() - 1;
+
+      std::string fileContent = bufferStr.substr(startIdx + 1, endIdx - startIdx - 1);
+
+      std::count << "File content: " << fileContent << std::endl << std:endl;
     }
   }
 
