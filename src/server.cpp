@@ -117,7 +117,7 @@ int main(int argc, char **argv) {
   int pos5 = bufferStr.find(' ', pos4);
   // stores the content of the user-agent header
   if (pos4 != std::string::npos && pos5 != std::string::npos) {
-    userAgentContent = bufferStr.substr(pos4 + 1, pos5 - pos4 - 1);
+    userAgentContent = bufferStr.substr(pos4 + strlen("User-Agent") + 2, pos5 - pos4 + strlen("User-Agent") - 1);
   }
 
   // if there is a space after '/', send OK
