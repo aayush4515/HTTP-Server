@@ -157,8 +157,7 @@ void handleClient(int client_fd) {
 
       std::string fileContent = bufferStr.substr(startIdx + 1, endIdx - startIdx - 1);
 
-      std::count << "File content: " << fileContent << std::endl << std:endl;
-    }
+      std::cout << "File content: " << fileContent << std::endl << std::endl;
   }
 
   close(client_fd);
