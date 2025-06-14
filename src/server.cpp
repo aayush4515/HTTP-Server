@@ -84,6 +84,7 @@ void handleClient(int client_fd) {
     size_t indexCompressionSchemeStart = bufferStr.find("Accept-Encoding: ") + 16;
     size_t indexCompressionSchemeEnd = bufferStr.find(' ', indexCompressionSchemeStart - 1);
     compressionScheme = bufferStr.substr(indexCompressionSchemeStart + 1, indexCompressionSchemeEnd - indexCompressionSchemeStart - 1);
+    compressionScheme.erase(0, compressionScheme.find_first_not_of(" \t"));
     compressionScheme.erase(compressionScheme.find_last_not_of(" \t") + 1);
   }
   std::cout << "Compression Scheme before entering is statements: " << compressionScheme << std::endl << std::endl;
