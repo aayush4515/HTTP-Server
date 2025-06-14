@@ -123,8 +123,9 @@ void handleClient(int client_fd) {
           response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n";
         }
       }
-
-      response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n\r\n" + contentStr;
+      else {
+        response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n\r\n" + contentStr;
+      }
       send(client_fd, response.c_str(), strlen(response.c_str()), 0);
     }
     else if (isUserAgent) {
