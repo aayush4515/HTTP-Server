@@ -84,7 +84,6 @@ int main(int argc, char **argv) {
 
   // checks if it's an echo request by finding the "echo" string
   bool isEcho = false;
-  std::string tempStr = "";
   std::string echoStr = "";
   if (pos3 != std::string::npos) {
     echoStr = bufferStr.substr(pos1 + 1, pos3 - pos1 -1);
@@ -93,19 +92,43 @@ int main(int argc, char **argv) {
     isEcho = true;
   }
 
+  // chekcs if it's a user-agent request by finding the "user-agent" string
+  bool isUserAgent = false;
+  std::string userAgentStr = "";
+  if (pos1 != std::string::npos && pos2 != std::string::npos) {
+    userAgentStr = bufferStr.substr(pos1 +1, pos2 - pos1 - 1);
+  }
+  if (userAgentStr == "user-agent") {
+    isUserAgent = true;
+  }
+
   // empty string, if there is nothing after '/', return OK
   std::string rootStr = "";
 
   // extract the string after echo/
   std::string contentStr = bufferStr.substr(pos3 + 1, pos2 - pos3 -1);
 
+  // extract the string after 'User-Agent:' header
+
+  // stores the first occurence of the string "User-Agent"
+  int pos4 = bufferStr.find("User-Agent:");
+  // stores the first occurence of a space after "User-Agent"
+  int pos5 = bufferStr.find(' ', pos4);
+  // stores the content of the user-agent header
+  if (pos4 != std::string::npos && pos5 != std::string::npos) {
+    std::string userAgentContent = bufferStr.substr(pos4 + 1, pos5 - pos4 - 1);
+  }
+
   // if there is a space after '/', send OK
   std::string response = "";
 
   if (isEcho) {
-    response = "HTTP/1.1 200 OK\r\n\Content-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n\r\n" + contentStr;
+    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n\r\n" + contentStr;
     send(client_fd, response.c_str(), strlen(response.c_str()), 0);
-    std::cout << "isEcho block got executed!!!" << std::endl << std::endl;
+  }
+  else if (isUserAgent) {
+    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(userAgentStr.length()) + "\r\n\r\n" + userAgentStr;
+    send(client_fd, response.c_str(), strlen(response.c_str()), 0);
   }
   else if (reqString == rootStr) {
     response = "HTTP/1.1 200 OK\r\n\r\n";
@@ -117,16 +140,13 @@ int main(int argc, char **argv) {
     send(client_fd, response.c_str(), strlen(response.c_str()), 0);
   }
 
-  // debug prints
+  // user-agent endpoint to read the user-agent request header and return it in the response body
+  // if (isUserAgent) {
+  //   response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n\r\n" + ;
+  // }
 
-  // pos1 and pos3
-  std::cout << "Pos1: " << pos1 << " Pos3: " << pos3 << std::endl << std::endl;
-
-  // echo string
-  std::cout << "the echo string is: " << echoStr << std::endl << std::endl;
-
-  // echo bool
-  std::cout << "echo bool is(expected true): " << isEcho << std::endl << std::endl;
+  // display the request string for debugging
+  std::cout << "Request string: " << bufferStr << std::endl << std::endl;
 
   close(server_fd);
 
