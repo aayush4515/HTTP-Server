@@ -91,6 +91,9 @@ void handleClient(int client_fd) {
 
 }
 
+
+
+
 int main(int argc, char **argv) {
   // Flush after every std::cout / std::cerr
   std::cout << std::unitbuf;
@@ -148,16 +151,6 @@ int main(int argc, char **argv) {
     t.detach();
 
   }
-
-
-
-  // The following was for the challenge "Respond with 200"
-
-  // Response to be sent to the client
-  // const char* response = "HTTP/1.1 200 OK\r\n\r\n";
-  // Send the response
-  // send(client_fd, response, strlen(response), 0)
-
 
   close(server_fd);
 
