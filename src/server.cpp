@@ -74,6 +74,18 @@ void handleClient(int client_fd) {
     isFileRequest = true;
   }
 
+  // checks if it has compression headers
+  bool acceptsEncoding = false;
+  if (bufferStr.find("Accept-Encoding") != std::string::npos) {
+    acceptsEncoding = true;
+  }
+  std::string compressionScheme = "";
+  if (acceptsEncoding) {
+    size_t indexCompressionSchemeStart = bufferStr.find("Accept-Encoding: ") + 16;
+    size_t indexCompressionSchemeEnd = bufferStr.find(' ', indexCompressionSchemeStart - 1);
+    compressionScheme = bufferStr.substr(indexCompressionSchemeStart + 1, indexCompressionSchemeEnd - indexCompressionSchemeStart - 1);
+  }
+
 
   // empty string, if there is nothing after '/', return OK
   std::string rootStr = "";
@@ -102,6 +114,13 @@ void handleClient(int client_fd) {
 
   if (isGET) {
     if (isEcho) {
+
+      // check if it accepts encoding
+      if (acceptsEncoding) {
+        // display the compression scheme for debugging
+        std::cout << "Compression Scheme: " << compressionScheme << std::endl << std::endl;
+      }
+
       response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n\r\n" + contentStr;
       send(client_fd, response.c_str(), strlen(response.c_str()), 0);
     }
