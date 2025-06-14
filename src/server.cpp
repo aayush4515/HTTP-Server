@@ -101,6 +101,8 @@ void handleClient(int client_fd) {
     std::string fullPath = fileDirectory + "/" + fileName;
     std::ifstream file(fileName);
 
+    std::cout << "Full path: " << fullPath << std::endl << std::endl;
+
     if (!file) {
       std::cout << "File doesn't exist" << std::endl << std::endl;
     }
