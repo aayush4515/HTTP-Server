@@ -8,7 +8,9 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <thread>
+#include <filesystem>
 #include <fstream>
+#include <sstream>
 
 std::string fileDirectory = ".";  // Default to current directory
 
@@ -101,13 +103,21 @@ void handleClient(int client_fd) {
     std::string fullPath = fileDirectory + fileName;
     std::ifstream file(fullPath);
 
-    std::cout << "Full path: " << fullPath << std::endl << std::endl;
-
     if (!file) {
-      std::cout << "File doesn't exist" << std::endl << std::endl;
+      // send a 404 error
+      response = "HTTP/1.1 404 Not Found\r\n\r\n";
+      send(client_fd, response.c_str(), strlen(response.c_str()), 0);
     }
     else {
-      std::cout << "File exists!" << std::endl << std::endl;
+      // determine the file size using the path of the file
+      auto size = std::filesystem::file_size(fullPath);
+
+      // read the content of the file and store it in the buffer, use ifstream instance 'file' here
+      std::stringstream buffer;
+      buffer << file.rdbuf();
+
+      // send 200 OK with different headers and file content
+      response = "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: " + std::to_string(size) + "\r\n\r\n" + buffer.str();
     }
 
     file.close();
