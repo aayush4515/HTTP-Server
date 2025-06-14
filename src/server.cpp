@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <thread>
+#include <fstream>
 
 void handleClient(int client_fd) {
   // buffer stores the HTTP request string
@@ -92,6 +93,20 @@ void handleClient(int client_fd) {
     send(client_fd, response.c_str(), strlen(response.c_str()), 0);
   }
   else if (isFileRequest) {
+    // try to open the file
+    // if the file exists, provide proper 200 OK response with file content
+    // else, return 404 Not Found error
+    //std::string fullPath = "/Users/aayush/codecrafters-http-server-cpp/files/" + fileName;
+    std::ifstream file(fileName);
+
+    if (!file) {
+      std::cout << "File doesn't exist" << std::endl << std::endl;
+    }
+    else {
+      std::cout << "File exists!" << std::endl << std::endl;
+    }
+
+    file.close();
 
   }
   else if (reqString == rootStr) {
@@ -106,12 +121,6 @@ void handleClient(int client_fd) {
 
   // display the request string for debugging
   std::cout << "Request string: " << bufferStr << std::endl << std::endl;
-
-  // display the request substr for debugging
-  std::cout << "Request string: " << fileStr << std::endl << std::endl;
-
-  // display the request fileName for debugging
-  std::cout << "Request string: " << fileName << std::endl << std::endl;
 }
 
 
