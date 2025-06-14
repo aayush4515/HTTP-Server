@@ -175,7 +175,7 @@ void handleClient(int client_fd) {
       std::ifstream inFile(fullPath);
       std::stringstream buffer;
       buffer << inFile.rdbuf();
-      std::cout << "File content: " << buffer.str() << std::endl << std::endl;
+      //std::cout << "File content: " << buffer.str() << std::endl << std::endl;
       send(client_fd, response.c_str(), strlen(response.c_str()), 0);
 
       //std::cout << "File content: " << fileContent << std::endl << std::endl;
