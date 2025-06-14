@@ -112,12 +112,12 @@ int main(int argc, char **argv) {
   std::string userAgentContent = "";
 
   // stores the first occurence of the string "User-Agent"
-  int pos4 = bufferStr.find("User-Agent:");
-  // stores the first occurence of a space after "User-Agent"
-  int pos5 = bufferStr.find(' ', pos4);
+  int start = bufferStr.find("User-Agent:") + strlen("User-Agent:");
+  // stores the index of last character after the user-agent header
+  int end = bufferStr.find("\r\n", start);
   // stores the content of the user-agent header
-  if (pos4 != std::string::npos && pos5 != std::string::npos) {
-    userAgentContent = bufferStr.substr(pos4 + strlen("User-Agent") + 2, pos5 - pos4 + strlen("User-Agent") - 1);
+  if (start != std::string::npos && end != std::string::npos) {
+    userAgentContent = bufferStr.substr(start + 1, end - start - 1);
   }
 
   // if there is a space after '/', send OK
@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
   // display the request string for debugging
   std::cout << "Request string: " << bufferStr << std::endl << std::endl;
   // display user-agent for debugging
-  std::cout << "User Agent: " << userAgentContent << std::endl << std::endl;
+  std::cout << "User-Agent: " << userAgentContent << std::endl << std::endl;
 
   close(server_fd);
 
