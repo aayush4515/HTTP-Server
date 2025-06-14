@@ -155,7 +155,7 @@ void handleClient(int client_fd) {
       int startIdx = bufferStr.find_last_of("\r\n");
       int endIdx = bufferStr.length() - 1;
 
-      std::string fileContent = bufferStr.substr(startIdx + 1, endIdx - startIdx - 1);
+      std::string fileContent = bufferStr.substr(startIdx + 1, endIdx - startIdx);
 
       std::cout << "File content: " << fileContent << std::endl << std::endl;
     }
