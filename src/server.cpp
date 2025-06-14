@@ -164,6 +164,7 @@ void handleClient(int client_fd) {
 
   // display the request string for debugging
   std::cout << "Request string: " << bufferStr << std::endl << std::endl;
+  }
 }
 
 
