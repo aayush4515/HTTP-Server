@@ -118,6 +118,7 @@ void handleClient(int client_fd) {
 
       // send 200 OK with different headers and file content
       response = "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: " + std::to_string(size) + "\r\n\r\n" + buffer.str();
+      send(client_fd, response.c_str(), strlen(response.c_str()), 0);
     }
 
     file.close();
