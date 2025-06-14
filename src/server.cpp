@@ -147,7 +147,6 @@ void handleClient(int client_fd) {
       send(client_fd, response.c_str(), strlen(response.c_str()), 0);
     }
   }
-  std::cout << "isPOST: " << isPOST << std::endl << std::endl;
   else if (isPOST) {
     // check if it is a file request
     if (isFileRequest) {
@@ -159,6 +158,8 @@ void handleClient(int client_fd) {
       std::string fileContent = bufferStr.substr(startIdx + 1, endIdx - startIdx - 1);
 
       std::cout << "File content: " << fileContent << std::endl << std::endl;
+    }
+    std::cout << "isPOST: " << isPOST << std::endl << std::endl;
   }
 
   close(client_fd);
