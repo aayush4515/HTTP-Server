@@ -23,6 +23,18 @@ void handleClient(int client_fd) {
   // converts char array to string
   std::string bufferStr(buffer);
 
+  // checks whether GET or POST request
+  bool isGET = false;
+  bool isPOST = false;
+
+  std::string temp = bufferStr.substr(0, 4);
+  if (temp == "GET ") {
+    isGET = true;
+  }
+  else if (temp == "POST") {
+    isPOST = true;
+  }
+
   // positions between which the substring lies
   int pos1 = bufferStr.find('/');
   int pos2 = bufferStr.find(' ', pos1);
@@ -88,51 +100,62 @@ void handleClient(int client_fd) {
   // string used to store the response message to send back to the client
   std::string response = "";
 
-  if (isEcho) {
-    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n\r\n" + contentStr;
-    send(client_fd, response.c_str(), strlen(response.c_str()), 0);
-  }
-  else if (isUserAgent) {
-    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(userAgentContent.length()) + "\r\n\r\n" + userAgentContent;
-    send(client_fd, response.c_str(), strlen(response.c_str()), 0);
-  }
-  else if (isFileRequest) {
-    // try to open the file
-    // if the file exists, provide proper 200 OK response with file content
-    // else, return 404 Not Found error
-    std::string fullPath = fileDirectory + fileName;
-    std::ifstream file(fullPath);
+  if (isGET) {
+    if (isEcho) {
+      response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n\r\n" + contentStr;
+      send(client_fd, response.c_str(), strlen(response.c_str()), 0);
+    }
+    else if (isUserAgent) {
+      response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(userAgentContent.length()) + "\r\n\r\n" + userAgentContent;
+      send(client_fd, response.c_str(), strlen(response.c_str()), 0);
+    }
+    else if (isFileRequest) {
+      // try to open the file
+      // if the file exists, provide proper 200 OK response with file content
+      // else, return 404 Not Found error
+      std::string fullPath = fileDirectory + fileName;
+      std::ifstream file(fullPath);
 
-    if (!file) {
-      // send a 404 error
+      if (!file) {
+        // send a 404 error
+        response = "HTTP/1.1 404 Not Found\r\n\r\n";
+        send(client_fd, response.c_str(), strlen(response.c_str()), 0);
+      }
+      else {
+        // determine the file size using the path of the file; uses the filesystem library
+        auto size = std::filesystem::file_size(fullPath);
+
+        // read the content of the file and store it in the buffer, use ifstream instance 'file' here
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+
+        // send 200 OK with different headers and file content
+        response = "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: " + std::to_string(size) + "\r\n\r\n" + buffer.str();
+        send(client_fd, response.c_str(), strlen(response.c_str()), 0);
+      }
+
+      file.close();
+
+    }
+    else if (reqString == rootStr) {
+      response = "HTTP/1.1 200 OK\r\n\r\n";
+      send(client_fd, response.c_str(), strlen(response.c_str()), 0);
+    }
+    // else, send the error message
+    else {
       response = "HTTP/1.1 404 Not Found\r\n\r\n";
       send(client_fd, response.c_str(), strlen(response.c_str()), 0);
     }
-    else {
-      // determine the file size using the path of the file
-      auto size = std::filesystem::file_size(fullPath);
-
-      // read the content of the file and store it in the buffer, use ifstream instance 'file' here
-      std::stringstream buffer;
-      buffer << file.rdbuf();
-
-      // send 200 OK with different headers and file content
-      response = "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: " + std::to_string(size) + "\r\n\r\n" + buffer.str();
-      send(client_fd, response.c_str(), strlen(response.c_str()), 0);
+  }
+  else if (isPOST) {
+    // check if it is a file request
+    if (isFileRequest) {
+      // extract content to add to the file from the request stirng
+      //std::string fileContent = bufferStr.substr();
     }
+  }
 
-    file.close();
-
-  }
-  else if (reqString == rootStr) {
-    response = "HTTP/1.1 200 OK\r\n\r\n";
-    send(client_fd, response.c_str(), strlen(response.c_str()), 0);
-  }
-  // else, send the error message
-  else {
-    response = "HTTP/1.1 404 Not Found\r\n\r\n";
-    send(client_fd, response.c_str(), strlen(response.c_str()), 0);
-  }
+  close(client_fd);
 
   // display the request string for debugging
   std::cout << "Request string: " << bufferStr << std::endl << std::endl;
