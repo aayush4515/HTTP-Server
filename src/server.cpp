@@ -122,6 +122,7 @@ void handleClient(int client_fd) {
           response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Encoding: " + compressionScheme + "\r\n\r\n";
         } else {
           response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n";
+          std::cout << "Content Encoding not added to response!!!" << std::endl << std::endl;
         }
       }
       else {
