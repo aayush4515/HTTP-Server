@@ -151,15 +151,30 @@ void handleClient(int client_fd) {
     // check if it is a file request
     if (isFileRequest) {
       // extract content to add to the file from the request stirng
-
       int startIdx = bufferStr.find_last_of("\r\n");
       int endIdx = bufferStr.length() - 1;
-
       std::string fileContent = bufferStr.substr(startIdx + 1, endIdx - startIdx);
 
-      std::cout << "File content: " << fileContent << std::endl << std::endl;
+      // create the file using the file path
+      std::string fullPath = fileDirectory + fileName;
+      std::ofstream outFile(fullPath);
+
+      if (!outFile) {
+        std::cerr << "Error creating file!\n";
+      }
+
+      // write to the file
+      outFile << fileContent;
+
+      // close the file
+      outFile.close();
+
+      // response string
+      response = "HTTP/1.1 201 Created\r\n\r\n";
+      send(client_fd, response.c_str(), strlen(response.c_str()), 0);
+
+      //std::cout << "File content: " << fileContent << std::endl << std::endl;
     }
-    std::cout << "isPOST: " << isPOST << std::endl << std::endl;
   }
 
   close(client_fd);
