@@ -99,7 +99,7 @@ void handleClient(int client_fd) {
     // if the file exists, provide proper 200 OK response with file content
     // else, return 404 Not Found error
     std::string fullPath = fileDirectory + fileName;
-    std::ifstream file(fileName);
+    std::ifstream file(fullPath);
 
     std::cout << "Full path: " << fullPath << std::endl << std::endl;
 
