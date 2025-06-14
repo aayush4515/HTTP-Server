@@ -159,18 +159,19 @@ void handleClient(int client_fd) {
       std::string fullPath = fileDirectory + fileName;
       std::ofstream outFile(fullPath);
 
-      if (!outFile) {
-        std::cerr << "Error creating file!\n";
+      if (outFile) {
+        // write to the file
+        outFile << fileContent;
+
+        // close the file
+        outFile.close();
+
+        // response string
+        response = "HTTP/1.1 201 Created\r\n\r\n";
       }
-
-      // write to the file
-      outFile << fileContent;
-
-      // close the file
-      outFile.close();
-
-      // response string
-      response = "HTTP/1.1 201 Created\r\n\r\n";
+      else {
+        response = "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+      }
       send(client_fd, response.c_str(), strlen(response.c_str()), 0);
 
       //std::cout << "File content: " << fileContent << std::endl << std::endl;
