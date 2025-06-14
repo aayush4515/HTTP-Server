@@ -143,6 +143,8 @@ int main(int argc, char **argv) {
 
   // display the request string for debugging
   std::cout << "Request string: " << bufferStr << std::endl << std::endl;
+  // display user-agent for debugging
+  std::cout << "User Agent: " << userAgentContent << std::endl << std::endl;
 
   close(server_fd);
 
