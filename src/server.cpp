@@ -10,6 +10,8 @@
 #include <thread>
 #include <fstream>
 
+std::string fileDirectory = ".";  // Default to current directory
+
 void handleClient(int client_fd) {
   // buffer stores the HTTP request string
   char buffer[4096] = {0};
@@ -96,7 +98,7 @@ void handleClient(int client_fd) {
     // try to open the file
     // if the file exists, provide proper 200 OK response with file content
     // else, return 404 Not Found error
-    //std::string fullPath = "/Users/aayush/codecrafters-http-server-cpp/files/" + fileName;
+    std::string fullPath = fileDirectory + "/" + fileName;
     std::ifstream file(fileName);
 
     if (!file) {
@@ -127,6 +129,15 @@ void handleClient(int client_fd) {
 
 
 int main(int argc, char **argv) {
+
+  // Parse command-line arguments
+  for (int i = 1; i < argc - 1; ++i) {
+    if (std::string(argv[i]) == "--directory") {
+        fileDirectory = argv[i + 1];
+        break;
+    }
+  }
+
   // Flush after every std::cout / std::cerr
   std::cout << std::unitbuf;
   std::cerr << std::unitbuf;
