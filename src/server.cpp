@@ -147,6 +147,7 @@ void handleClient(int client_fd) {
       send(client_fd, response.c_str(), strlen(response.c_str()), 0);
     }
   }
+  std::cout << "isPOST: " << isPOST << std::endl << std::endl;
   else if (isPOST) {
     // check if it is a file request
     if (isFileRequest) {
