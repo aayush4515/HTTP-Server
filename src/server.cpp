@@ -65,21 +65,22 @@ void handleClient(int client_fd) {
   std::string contentStr = bufferStr.substr(pos3 + 1, pos2 - pos3 -1);
 
   // extracts the string after 'User-Agent:' header
-  std::string userAgentContent = "";
+
+    std::string userAgentContent = "";
+
+    // stores the first occurence of the string "User-Agent"
+    int start = bufferStr.find("User-Agent:") + strlen("User-Agent:");
+    // stores the index of last character after the user-agent header
+    int end = bufferStr.find("\r\n", start);
+    // stores the content of the user-agent header
+    if (start != std::string::npos && end != std::string::npos) {
+      userAgentContent = bufferStr.substr(start + 1, end - start - 1);
+    }
 
   // extract the filename for the /files endpoint
   std::string fileName = bufferStr.substr(pos3 + 1, pos2 - pos3 - 1);
 
-  // stores the first occurence of the string "User-Agent"
-  int start = bufferStr.find("User-Agent:") + strlen("User-Agent:");
-  // stores the index of last character after the user-agent header
-  int end = bufferStr.find("\r\n", start);
-  // stores the content of the user-agent header
-  if (start != std::string::npos && end != std::string::npos) {
-    userAgentContent = bufferStr.substr(start + 1, end - start - 1);
-  }
-
-  // if there is a space after '/', send OK
+  // string used to store the response message to send back to the client
   std::string response = "";
 
   if (isEcho) {
@@ -89,6 +90,9 @@ void handleClient(int client_fd) {
   else if (isUserAgent) {
     response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(userAgentContent.length()) + "\r\n\r\n" + userAgentContent;
     send(client_fd, response.c_str(), strlen(response.c_str()), 0);
+  }
+  else if (isFileRequest) {
+
   }
   else if (reqString == rootStr) {
     response = "HTTP/1.1 200 OK\r\n\r\n";
@@ -103,6 +107,11 @@ void handleClient(int client_fd) {
   // display the request string for debugging
   std::cout << "Request string: " << bufferStr << std::endl << std::endl;
 
+  // display the request substr for debugging
+  std::cout << "Request string: " << fileStr << std::endl << std::endl;
+
+  // display the request fileName for debugging
+  std::cout << "Request string: " << fileName << std::endl << std::endl;
 }
 
 
