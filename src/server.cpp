@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
   // extract the string after echo/
   std::string contentStr = bufferStr.substr(pos3 + 1, pos2 - pos3 -1);
 
-  // extract the string after 'User-Agent:' header
+  // Extracts the string after 'User-Agent:' header
 
   // stores the first occurence of the string "User-Agent"
   int pos4 = bufferStr.find("User-Agent:");
@@ -139,11 +139,6 @@ int main(int argc, char **argv) {
     response = "HTTP/1.1 404 Not Found\r\n\r\n";
     send(client_fd, response.c_str(), strlen(response.c_str()), 0);
   }
-
-  // user-agent endpoint to read the user-agent request header and return it in the response body
-  // if (isUserAgent) {
-  //   response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n\r\n" + ;
-  // }
 
   // display the request string for debugging
   std::cout << "Request string: " << bufferStr << std::endl << std::endl;
