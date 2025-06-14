@@ -41,11 +41,22 @@ void handleClient(int client_fd) {
   bool isUserAgent = false;
   std::string userAgentStr = "";
   if (pos1 != std::string::npos && pos2 != std::string::npos) {
-    userAgentStr = bufferStr.substr(pos1 +1, pos2 - pos1 - 1);
+    userAgentStr = bufferStr.substr(pos1 + 1, pos2 - pos1 - 1);
   }
   if (userAgentStr == "user-agent") {
     isUserAgent = true;
   }
+
+  // checks if it's a file request by finding the "files" string
+  bool isFileRequest = false;
+  std::string fileStr = "";
+  if (pos1 != std::string::npos && pos2 != std::string::npos) {
+    fileStr = bufferStr.substr(pos1 + 1, pos3 - pos1 - 1);
+  }
+  if (fileStr == "files") {
+    isFileRequest = true;
+  }
+
 
   // empty string, if there is nothing after '/', return OK
   std::string rootStr = "";
@@ -55,6 +66,9 @@ void handleClient(int client_fd) {
 
   // extracts the string after 'User-Agent:' header
   std::string userAgentContent = "";
+
+  // extract the filename for the /files endpoint
+  std::string fileName = bufferStr.substr(pos3 + 1, pos2 - pos3 - 1);
 
   // stores the first occurence of the string "User-Agent"
   int start = bufferStr.find("User-Agent:") + strlen("User-Agent:");
