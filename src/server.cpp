@@ -85,6 +85,7 @@ void handleClient(int client_fd) {
     size_t indexCompressionSchemeEnd = bufferStr.find(' ', indexCompressionSchemeStart - 1);
     compressionScheme = bufferStr.substr(indexCompressionSchemeStart + 1, indexCompressionSchemeEnd - indexCompressionSchemeStart - 1);
   }
+  std::cout << "Compression Scheme before entering is statements: " << compressionScheme << std::endl << std::endl;
 
 
   // empty string, if there is nothing after '/', return OK
