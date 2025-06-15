@@ -151,8 +151,6 @@ void handleRequest(std::string bufferStr, int client_fd, bool& closeConnection) 
   // close the connection is it's a "Connection: close" request
   // if (closeConnection) {
   //   std::string response = "Connection: close\r\n\r\n";
-  //   send(client_fd, response.c_str(), strlen(response.c_str()), 0);
-  //   return;
   // }
 
   if (isGET) {
@@ -191,12 +189,22 @@ void handleRequest(std::string bufferStr, int client_fd, bool& closeConnection) 
         }
       }
       else {
-        response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n\r\n" + contentStr;
+        if (closeConnection) {
+          response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n" + contentStr + "Connection: close\r\n\r\n";
+        }
+        else {
+          response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n\r\n" + contentStr;
+        }
       }
       send(client_fd, response.c_str(), strlen(response.c_str()), 0);
     }
     else if (isUserAgent) {
-      response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(userAgentContent.length()) + "\r\n\r\n" + userAgentContent;
+      if (closeConnection) {
+        response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(userAgentContent.length()) + "\r\n" + userAgentContent + "Connection: close\r\n\r\n";
+
+      } else {
+        response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(userAgentContent.length()) + "\r\n\r\n" + userAgentContent;
+      }
       send(client_fd, response.c_str(), strlen(response.c_str()), 0);
     }
     else if (isFileRequest) {
