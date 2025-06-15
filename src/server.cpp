@@ -183,7 +183,7 @@ void handleClient(int client_fd) {
         }
         if (hasGzip) {
           std::string body = gzipCompress(contentStr);
-          response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Encoding: gzip\r\nContent-Length: " +  std::to_string(body.size()) + "\r\n\r\n";
+          response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Encoding: gzip\r\nContent-Length: " +  std::to_string(body.size()) + "\r\n\r\n" + body.data();
         }
         else {
           response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n";
