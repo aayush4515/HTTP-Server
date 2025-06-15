@@ -128,7 +128,7 @@ void handleClient(int client_fd) {
       // check if it accepts encoding
       if (acceptsEncoding) {
         std::cout << "Accepts Encoding!!!" << std::endl << std::endl;
-        std::cout << "Compression Scheme: " << compressionScheme;
+        std::cout << "Compression Scheme: " << compressionScheme << std::endl;
         if (compressionScheme == "gzip") {
           std::cout << "Content Encoding added to response!!!" << std::endl << std::endl;
           response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Encoding: " + compressionScheme + "\r\n\r\n";
