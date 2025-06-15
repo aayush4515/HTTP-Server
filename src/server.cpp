@@ -35,15 +35,7 @@ std::string gzipCompress(const std::string& data) {
   return out;
 }
 
-void handleClient(int client_fd) {
-  // buffer stores the HTTP request string
-  char buffer[4096] = {0};
-  // receives the HTTP request and stores in buffer
-  recv(client_fd, buffer, sizeof(buffer) - 1, 0);
-
-  // converts char array to string
-  std::string bufferStr(buffer);
-
+void handleRequest(std::string bufferStr, int client_fd) {
   // checks whether GET or POST request
   bool isGET = false;
   bool isPOST = false;
@@ -272,6 +264,36 @@ void handleClient(int client_fd) {
 
   // display the request string for debugging
   std::cout << "Request string: " << bufferStr << std::endl << std::endl;
+}
+
+void handleClient(int client_fd) {
+  while (true) {
+    // buffer stores the HTTP request string
+    char buffer[4096] = {0};
+    // receives the HTTP request and stores in buffer, also stores the bytes received in bytesReceived
+    size_t bytesReceived = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
+
+    // client closed the connection
+    if (bytesReceived <= 0) {
+      break;
+    }
+
+    // converts char array to string
+    std::string bufferStr(buffer);
+
+    // check for "Connection: close" header
+    bool closeConnection = false;
+
+    // handle the request
+    handleRequest(bufferStr, client_fd);
+
+    // close the connection if "Connection: close" is found
+    if (closeConnection) {
+      break;
+    }
+
+  }
+
 }
 
 
