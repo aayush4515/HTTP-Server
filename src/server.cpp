@@ -236,7 +236,12 @@ void handleRequest(std::string bufferStr, int client_fd, bool& closeConnection) 
 
     }
     else if (reqString == rootStr) {
-      response = "HTTP/1.1 200 OK\r\n\r\n";
+      if (closeConnection) {
+        response = "HTTP/1.1 200 OK\r\nConnection: close\r\n\r\n";
+      }
+      else {
+        response = "HTTP/1.1 200 OK\r\n\r\n";
+      }
       send(client_fd, response.c_str(), strlen(response.c_str()), 0);
     }
     // else, send the error message
