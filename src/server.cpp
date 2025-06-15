@@ -260,7 +260,7 @@ void handleRequest(std::string bufferStr, int client_fd) {
     }
   }
 
-  close(client_fd);
+  //close(client_fd);
 
   // display the request string for debugging
   std::cout << "Request string: " << bufferStr << std::endl << std::endl;
@@ -291,9 +291,8 @@ void handleClient(int client_fd) {
     if (closeConnection) {
       break;
     }
-
   }
-
+  close(client_fd);
 }
 
 
