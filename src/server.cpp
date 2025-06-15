@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <vector>
 
 std::string fileDirectory = ".";  // Default to current directory
 
@@ -79,22 +80,38 @@ void handleClient(int client_fd) {
   if (bufferStr.find("Accept-Encoding") != std::string::npos) {
     acceptsEncoding = true;
   }
-  std::string compressionScheme = "";
+  // std::string compressionScheme = "";
 
-  // if (acceptsEncoding) {
-  //   size_t indexCompressionSchemeStart = bufferStr.find("Accept-Encoding: ") + 16;
-  //   size_t indexCompressionSchemeEnd = bufferStr.find(' ', indexCompressionSchemeStart - 1);
-  //   compressionScheme = bufferStr.substr(indexCompressionSchemeStart + 1, indexCompressionSchemeEnd - indexCompressionSchemeStart - 1);
+  // size_t encPos = bufferStr.find("Accept-Encoding: ");
+  // if (encPos != std::string::npos and acceptsEncoding) {
+  //   size_t valStart = encPos + strlen("Accept-Encoding: ");
+  //   size_t valEnd = bufferStr.find("\r\n", valStart);
+  //   compressionScheme = bufferStr.substr(valStart, valEnd - valStart);
   // }
 
-  size_t encPos = bufferStr.find("Accept-Encoding: ");
-  if (encPos != std::string::npos and acceptsEncoding) {
-    size_t valStart = encPos + strlen("Accept-Encoding: ");
-    size_t valEnd = bufferStr.find("\r\n", valStart);
-    compressionScheme = bufferStr.substr(valStart, valEnd - valStart);
+  // handles multiple comma-separated encodings
+  std::vector<std::string> compressionSchemes;                                    // stores encoding schemes
+  size_t encPos = bufferStr.find("Accept-Encoding: ");                            // first index of "Accpet-Encoding" string
+  size_t valueStart = encPos + strlen("Accept-Encoding: ");                       // starting index of encodings
+  size_t lineEnd = bufferStr.find("\r\n", valueStart);                            // final index of encodings
+
+  std::string encodingLine = bufferStr.substr(valueStart, lineEnd - valueStart);  // stores the encoding line
+  std::stringstream ss(encodingLine);                                             // stringstream instance with encodingLine for string parsing
+  std::string item;                                                               // temp string to hold individual strings temporarily
+
+  // reads from stringstream ss until the next comma, and stores each encoding in item in each loop
+  while(std::getline(ss, item, ',')) {
+    size_t firstChar = item.find_first_not_of(" ");                       // stores the index of the first character which is not a whitespace; i.e. the first encoding
+    compressionSchemes.push_back(item.substr(firstChar));                 // stores each encoding in the compression schemes vector, firstChar specifies the starting position, in this case
+                                                                          // used for specifiying the first char after space... in short, removing the leading space
   }
 
-  std::cout << "Compression Scheme before entering is statements: " << compressionScheme << std::endl << std::endl;
+  // printing encodings to check
+  for (auto encoding : compressionSchemes) {
+    std::cout << "Encoding: " << encoding << std::endl;
+  }
+
+  //std::cout << "Compression Scheme before entering is statements: " << compressionScheme << std::endl << std::endl;
 
 
   // empty string, if there is nothing after '/', return OK
@@ -127,15 +144,15 @@ void handleClient(int client_fd) {
 
       // check if it accepts encoding
       if (acceptsEncoding) {
-        std::cout << "Accepts Encoding!!!" << std::endl << std::endl;
-        std::cout << "Compression Scheme: " << compressionScheme << "Size: " << strlen(compressionScheme.c_str()) << std::endl;
-        if (strcmp(compressionScheme.c_str(), "gzip") == 0) {
-          std::cout << "Content Encoding added to response!!!" << std::endl << std::endl;
-          response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Encoding: " + compressionScheme + "\r\n\r\n";
-        } else {
-          response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n";
-          std::cout << "Content Encoding not added to response!!!" << std::endl << std::endl;
-        }
+        //std::cout << "Accepts Encoding!!!" << std::endl << std::endl;
+        //std::cout << "Compression Scheme: " << compressionScheme << "Size: " << strlen(compressionScheme.c_str()) << std::endl;
+        // if (strcmp(compressionScheme.c_str(), "gzip") == 0) {
+        //   //std::cout << "Content Encoding added to response!!!" << std::endl << std::endl;
+        //   response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Encoding: " + compressionScheme + "\r\n\r\n";
+        // } else {
+        //   response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n";
+        //   //std::cout << "Content Encoding not added to response!!!" << std::endl << std::endl;
+        // }
       }
       else {
         response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n\r\n" + contentStr;
