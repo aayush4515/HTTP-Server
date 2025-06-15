@@ -190,7 +190,7 @@ void handleRequest(std::string bufferStr, int client_fd, bool& closeConnection) 
       }
       else {
         if (closeConnection) {
-          response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n" + contentStr + "Connection: close\r\n\r\n";
+          response = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n\r\n" + contentStr;
         }
         else {
           response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n\r\n" + contentStr;
@@ -200,7 +200,7 @@ void handleRequest(std::string bufferStr, int client_fd, bool& closeConnection) 
     }
     else if (isUserAgent) {
       if (closeConnection) {
-        response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(userAgentContent.length()) + "\r\n" + userAgentContent + "Connection: close\r\n\r\n";
+        response = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(userAgentContent.length()) + "\r\n\r\n" + userAgentContent;
 
       } else {
         response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(userAgentContent.length()) + "\r\n\r\n" + userAgentContent;
