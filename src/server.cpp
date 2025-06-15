@@ -381,7 +381,6 @@ int main(int argc, char **argv) {
       handleClient(client_fd);
     });
     t.detach();
-
   }
   close(server_fd);
   return 0;
