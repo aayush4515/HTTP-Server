@@ -91,7 +91,7 @@ void handleClient(int client_fd) {
   if (encPos != std::string::npos and acceptsEncoding) {
     size_t valStart = encPos + strlen("Accept-Encoding: ");
     size_t valEnd = bufferStr.find("\r\n", valStart);
-    compressionScheme = bufferStr.substr(valStart + 1, valEnd - valStart - 1);
+    compressionScheme = bufferStr.substr(valStart + 2, valEnd - valStart - 1);
   }
 
   std::cout << "Compression Scheme before entering is statements: " << compressionScheme << std::endl << std::endl;
