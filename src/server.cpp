@@ -288,6 +288,8 @@ void handleClient(int client_fd) {
 
     // close the connection if "Connection: close" is found
     if (closeConnection) {
+      std::string response = "Connection: close\r\n\r\n";
+      send(client_fd, response.c_str(), strlen(response.c_str()), 0);
       break;
     }
   }
