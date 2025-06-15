@@ -12,8 +12,28 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <zlib.h>
 
 std::string fileDirectory = ".";  // Default to current directory
+
+std::string gzipCompress(const std::string& data) {
+  z_stream zs{};
+  deflateInit2(&zs, Z_BEST_COMPRESSION, Z_DEFLATED, 15 + 16, 8, Z_DEFAULT_STRATEGY);
+  zs.next_in = (Bytef*)data.data();
+  zs.avail_in = data.size();
+
+  std::string out;
+  char buffer[4096];
+  int ret;
+  do {
+      zs.next_out = (Bytef*)buffer;
+      zs.avail_out = sizeof(buffer);
+      ret = deflate(&zs, Z_FINISH);
+      out.append(buffer, sizeof(buffer) - zs.avail_out);
+  } while (ret == Z_OK);
+  deflateEnd(&zs);
+  return out;
+}
 
 void handleClient(int client_fd) {
   // buffer stores the HTTP request string
@@ -157,13 +177,13 @@ void handleClient(int client_fd) {
 
         // check for every single encoding
         for (const auto& encoding : compressionSchemes) {
-          std::cout << "Encodings: " << encoding << std::endl;
           if (strcmp(encoding.c_str(), "gzip") == 0) {
             hasGzip = true;
           }
         }
         if (hasGzip) {
-          response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Encoding: gzip\r\n\r\n";
+          std::string body = gzipCompress(contentStr);
+          response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Encoding: gzip\r\nContent-Length: " +  std::to_string(body.size()) + "\r\n\r\n";
         }
         else {
           response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n";
