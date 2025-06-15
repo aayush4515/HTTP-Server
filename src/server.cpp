@@ -157,6 +157,7 @@ void handleClient(int client_fd) {
 
         // check for every single encoding
         for (const auto& encoding : compressionSchemes) {
+          std::cout << "Encodings: " << encoding << std::endl;
           if (strcmp(encoding.c_str(), "gzip") == 0) {
             hasGzip = true;
           }
