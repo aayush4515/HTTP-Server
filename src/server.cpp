@@ -87,11 +87,11 @@ void handleClient(int client_fd) {
   //   compressionScheme = bufferStr.substr(indexCompressionSchemeStart + 1, indexCompressionSchemeEnd - indexCompressionSchemeStart - 1);
   // }
 
-  size_t encPos = bufferStr.find("Accept-Encoding");
+  size_t encPos = bufferStr.find("Accept-Encoding: ");
   if (encPos != std::string::npos and acceptsEncoding) {
-    size_t valStart = encPos + strlen("Accept-Encoding");
+    size_t valStart = encPos + strlen("Accept-Encoding: ");
     size_t valEnd = bufferStr.find("\r\n", valStart);
-    compressionScheme = bufferStr.substr(valStart + 2, valEnd - valStart - 2);
+    compressionScheme = bufferStr.substr(valStart + 1, valEnd - valStart - 1);
   }
 
   std::cout << "Compression Scheme before entering is statements: " << compressionScheme << std::endl << std::endl;
