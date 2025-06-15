@@ -35,7 +35,7 @@ std::string gzipCompress(const std::string& data) {
   return out;
 }
 
-void handleRequest(std::string bufferStr, int client_fd) {
+void handleRequest(std::string bufferStr, int client_fd, bool& closeConnection) {
   // checks whether GET or POST request
   bool isGET = false;
   bool isPOST = false;
@@ -147,6 +147,13 @@ void handleRequest(std::string bufferStr, int client_fd) {
 
   // string used to store the response message to send back to the client
   std::string response = "";
+
+  // close the connection is it's a "Connection: close" request
+  if (closeConnection) {
+    std::string response = "Connection: close\r\n\r\n";
+    send(client_fd, response.c_str(), strlen(response.c_str()), 0);
+    return;
+  }
 
   if (isGET) {
     if (isEcho) {
@@ -281,15 +288,13 @@ void handleClient(int client_fd) {
     std::string bufferStr(buffer);
 
     // check for "Connection: close" header
-    bool closeConnection = false;
+    bool closeConnection = bufferStr.find("Connection: close") != std::string::npos;
 
     // handle the request
-    handleRequest(bufferStr, client_fd);
+    handleRequest(bufferStr, client_fd, closeConnection);
 
     // close the connection if "Connection: close" is found
     if (closeConnection) {
-      std::string response = "Connection: close\r\n\r\n";
-      send(client_fd, response.c_str(), strlen(response.c_str()), 0);
       break;
     }
   }
