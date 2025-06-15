@@ -149,11 +149,11 @@ void handleRequest(std::string bufferStr, int client_fd, bool& closeConnection) 
   std::string response = "";
 
   // close the connection is it's a "Connection: close" request
-  if (closeConnection) {
-    std::string response = "Connection: close\r\n\r\n";
-    send(client_fd, response.c_str(), strlen(response.c_str()), 0);
-    return;
-  }
+  // if (closeConnection) {
+  //   std::string response = "Connection: close\r\n\r\n";
+  //   send(client_fd, response.c_str(), strlen(response.c_str()), 0);
+  //   return;
+  // }
 
   if (isGET) {
     if (isEcho) {
