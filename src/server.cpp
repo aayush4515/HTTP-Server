@@ -91,7 +91,10 @@ void handleClient(int client_fd) {
 
   // handles multiple comma-separated encodings
   std::vector<std::string> compressionSchemes;                                    // stores encoding schemes
-  size_t encPos = bufferStr.find("Accept-Encoding: ");                            // first index of "Accpet-Encoding" string
+  size_t encPos = 0;
+  if (acceptsEncoding) {
+    encPos = bufferStr.find("Accept-Encoding: ");                                 // first index of "Accpet-Encoding" string
+  }
   size_t valueStart = encPos + strlen("Accept-Encoding: ");                       // starting index of encodings
   size_t lineEnd = bufferStr.find("\r\n", valueStart);                            // final index of encodings
 
@@ -104,11 +107,6 @@ void handleClient(int client_fd) {
     size_t firstChar = item.find_first_not_of(" ");                       // stores the index of the first character which is not a whitespace; i.e. the first encoding
     compressionSchemes.push_back(item.substr(firstChar));                 // stores each encoding in the compression schemes vector, firstChar specifies the starting position, in this case
                                                                           // used for specifiying the first char after space... in short, removing the leading space
-  }
-
-  // printing encodings to check
-  for (auto encoding : compressionSchemes) {
-    std::cout << "Encoding: " << encoding << std::endl;
   }
 
   //std::cout << "Compression Scheme before entering is statements: " << compressionScheme << std::endl << std::endl;
@@ -153,6 +151,23 @@ void handleClient(int client_fd) {
         //   response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n";
         //   //std::cout << "Content Encoding not added to response!!!" << std::endl << std::endl;
         // }
+
+        // check for gzip
+        bool hasGzip = false;
+
+
+        // check for every single encoding
+        for (const auto& encoding : compressionSchemes) {
+          if (strcmp(encoding.c_str(), "gzip") == 0) {
+            hasGzip = true;
+          }
+        }
+        if (hasGzip) {
+          response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Encoding: gzip\r\n\r\n";
+        }
+        else {
+          response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n";
+        }
       }
       else {
         response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n\r\n" + contentStr;
