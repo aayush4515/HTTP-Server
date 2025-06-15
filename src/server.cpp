@@ -113,7 +113,7 @@ void handleClient(int client_fd) {
     int end = bufferStr.find("\r\n", start);
     // stores the content of the user-agent header
     if (start != std::string::npos && end != std::string::npos) {
-      userAgentContent = bufferStr.substr(start + 1, end - start - 1);
+      userAgentContent = bufferStr.substr(start + 1, end - start - 2);
     }
 
   // extract the filename for the /files endpoint
