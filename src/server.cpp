@@ -123,7 +123,6 @@ void handleRequest(std::string bufferStr, int client_fd) {
 
   //std::cout << "Compression Scheme before entering is statements: " << compressionScheme << std::endl << std::endl;
 
-
   // empty string, if there is nothing after '/', return OK
   std::string rootStr = "";
 
