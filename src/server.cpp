@@ -91,7 +91,7 @@ void handleClient(int client_fd) {
   if (encPos != std::string::npos and acceptsEncoding) {
     size_t valStart = encPos + strlen("Accept-Encoding");
     size_t valEnd = bufferStr.find("\r\n", valStart);
-    compressionScheme = bufferStr.substr(valStart + 2, valEnd + 2 - valStart - 1);
+    compressionScheme = bufferStr.substr(valStart + 2, valEnd - valStart - 1);
   }
 
   std::cout << "Compression Scheme before entering is statements: " << compressionScheme << std::endl << std::endl;
@@ -113,7 +113,7 @@ void handleClient(int client_fd) {
     int end = bufferStr.find("\r\n", start);
     // stores the content of the user-agent header
     if (start != std::string::npos && end != std::string::npos) {
-      userAgentContent = bufferStr.substr(start, end - start - 2);
+      userAgentContent = bufferStr.substr(start + 1, end - start - 1);
     }
 
   // extract the filename for the /files endpoint
