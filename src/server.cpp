@@ -155,7 +155,6 @@ void handleClient(int client_fd) {
         // check for gzip
         bool hasGzip = false;
 
-
         // check for every single encoding
         for (const auto& encoding : compressionSchemes) {
           if (strcmp(encoding.c_str(), "gzip") == 0) {
@@ -320,7 +319,6 @@ int main(int argc, char **argv) {
     t.detach();
 
   }
-
   close(server_fd);
   return 0;
 }
