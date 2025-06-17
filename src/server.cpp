@@ -14,6 +14,7 @@
 #include <sstream>
 #include <vector>
 #include <zlib.h>
+#include <algorithm> // Needed for std::find
 
 std::string fileDirectory = "."; // Default file directory
 
@@ -94,7 +95,7 @@ void handleRequest(const std::string& bufferStr, int client_fd, bool& closeConne
   closeConnection = checkHeaderPresence(bufferStr, "Connection: close");
 
   std::vector<std::string> encodings = parseCompressionSchemes(bufferStr);
-  bool gzipAccepted = std::find(encodings.begin(), encodings.end(), "gzip") != encodings.end();
+  bool gzipAccepted = std::find(encodings.begin(), encodings.end(), std::string("gzip")) != encodings.end();
 
   std::string response;
 
