@@ -1,3 +1,4 @@
+// Refactored C++ HTTP server in a single .cpp file with reusable helper functions
 #include <iostream>
 #include <cstdlib>
 #include <string>
@@ -14,8 +15,9 @@
 #include <vector>
 #include <zlib.h>
 
-std::string fileDirectory = ".";  // Default to current directory
+std::string fileDirectory = "."; // Default file directory
 
+// Compresses data using gzip
 std::string gzipCompress(const std::string& data) {
   z_stream zs{};
   deflateInit2(&zs, Z_BEST_COMPRESSION, Z_DEFLATED, 15 + 16, 8, Z_DEFAULT_STRATEGY);
@@ -26,361 +28,170 @@ std::string gzipCompress(const std::string& data) {
   char buffer[4096];
   int ret;
   do {
-      zs.next_out = (Bytef*)buffer;
-      zs.avail_out = sizeof(buffer);
-      ret = deflate(&zs, Z_FINISH);
-      out.append(buffer, sizeof(buffer) - zs.avail_out);
+    zs.next_out = (Bytef*)buffer;
+    zs.avail_out = sizeof(buffer);
+    ret = deflate(&zs, Z_FINISH);
+    out.append(buffer, sizeof(buffer) - zs.avail_out);
   } while (ret == Z_OK);
   deflateEnd(&zs);
   return out;
 }
 
-void handleRequest(std::string bufferStr, int client_fd, bool& closeConnection) {
-  // checks whether GET or POST request
-  bool isGET = false;
-  bool isPOST = false;
-
-  std::string temp = bufferStr.substr(0, 4);
-  if (temp == "GET ") {
-    isGET = true;
-  }
-  else if (temp == "POST") {
-    isPOST = true;
-  }
-
-  // positions between which the substring lies
-  int pos1 = bufferStr.find('/');
-  int pos2 = bufferStr.find(' ', pos1);
-  // finds the second '/'
-  int pos3 = bufferStr.find('/', pos1 + 1);
-
-  // find the substring after '/'
-  std::string reqString = bufferStr.substr(pos1 + 1, pos2 - pos1 - 1);
-
-  // checks if it's an echo request by finding the "echo" string
-  bool isEcho = false;
-  std::string echoStr = "";
-  if (pos3 != std::string::npos) {
-    echoStr = bufferStr.substr(pos1 + 1, pos3 - pos1 -1);
-  }
-  if (echoStr == "echo") {
-    isEcho = true;
-  }
-
-  // chekcs if it's a user-agent request by finding the "user-agent" string
-  bool isUserAgent = false;
-  std::string userAgentStr = "";
-  if (pos1 != std::string::npos && pos2 != std::string::npos) {
-    userAgentStr = bufferStr.substr(pos1 + 1, pos2 - pos1 - 1);
-  }
-  if (userAgentStr == "user-agent") {
-    isUserAgent = true;
-  }
-
-  // checks if it's a file request by finding the "files" string
-  bool isFileRequest = false;
-  std::string fileStr = "";
-  if (pos1 != std::string::npos && pos2 != std::string::npos) {
-    fileStr = bufferStr.substr(pos1 + 1, pos3 - pos1 - 1);
-  }
-  if (fileStr == "files") {
-    isFileRequest = true;
-  }
-
-  // checks if it has compression headers
-  bool acceptsEncoding = false;
-  if (bufferStr.find("Accept-Encoding") != std::string::npos) {
-    acceptsEncoding = true;
-  }
-  // std::string compressionScheme = "";
-
-  // size_t encPos = bufferStr.find("Accept-Encoding: ");
-  // if (encPos != std::string::npos and acceptsEncoding) {
-  //   size_t valStart = encPos + strlen("Accept-Encoding: ");
-  //   size_t valEnd = bufferStr.find("\r\n", valStart);
-  //   compressionScheme = bufferStr.substr(valStart, valEnd - valStart);
-  // }
-
-  // handles multiple comma-separated encodings
-  std::vector<std::string> compressionSchemes;                                    // stores encoding schemes
-  size_t encPos = 0;
-  if (acceptsEncoding) {
-    encPos = bufferStr.find("Accept-Encoding: ");                                 // first index of "Accpet-Encoding" string
-  }
-  size_t valueStart = encPos + strlen("Accept-Encoding: ");                       // starting index of encodings
-  size_t lineEnd = bufferStr.find("\r\n", valueStart);                            // final index of encodings
-
-  std::string encodingLine = bufferStr.substr(valueStart, lineEnd - valueStart);  // stores the encoding line
-  std::stringstream ss(encodingLine);                                             // stringstream instance with encodingLine for string parsing
-  std::string item;                                                               // temp string to hold individual strings temporarily
-
-  // reads from stringstream ss until the next comma, and stores each encoding in item in each loop
-  while(std::getline(ss, item, ',')) {
-    size_t firstChar = item.find_first_not_of(" ");                       // stores the index of the first character which is not a whitespace; i.e. the first encoding
-    compressionSchemes.push_back(item.substr(firstChar));                 // stores each encoding in the compression schemes vector, firstChar specifies the starting position, in this case
-                                                                          // used for specifiying the first char after space... in short, removing the leading space
-  }
-
-  //std::cout << "Compression Scheme before entering is statements: " << compressionScheme << std::endl << std::endl;
-
-  // empty string, if there is nothing after '/', return OK
-  std::string rootStr = "";
-
-  // extract the string after echo/
-  std::string contentStr = bufferStr.substr(pos3 + 1, pos2 - pos3 -1);
-
-  // extracts the string after 'User-Agent:' header
-
-    std::string userAgentContent = "";
-
-    // stores the first occurence of the string "User-Agent"
-    int start = bufferStr.find("User-Agent:") + strlen("User-Agent:");
-    // stores the index of last character after the user-agent header
-    int end = bufferStr.find("\r\n", start);
-    // stores the content of the user-agent header
-    if (start != std::string::npos && end != std::string::npos) {
-      userAgentContent = bufferStr.substr(start + 1, end - start - 1);
-    }
-
-  // extract the filename for the /files endpoint
-  std::string fileName = bufferStr.substr(pos3 + 1, pos2 - pos3 - 1);
-
-  // string used to store the response message to send back to the client
-  std::string response = "";
-
-  // close the connection is it's a "Connection: close" request
-  // if (closeConnection) {
-  //   std::string response = "Connection: close\r\n\r\n";
-  // }
-
-  if (isGET) {
-    if (isEcho) {
-
-      // check if it accepts encoding
-      if (acceptsEncoding) {
-        //std::cout << "Accepts Encoding!!!" << std::endl << std::endl;
-        //std::cout << "Compression Scheme: " << compressionScheme << "Size: " << strlen(compressionScheme.c_str()) << std::endl;
-        // if (strcmp(compressionScheme.c_str(), "gzip") == 0) {
-        //   //std::cout << "Content Encoding added to response!!!" << std::endl << std::endl;
-        //   response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Encoding: " + compressionScheme + "\r\n\r\n";
-        // } else {
-        //   response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n";
-        //   //std::cout << "Content Encoding not added to response!!!" << std::endl << std::endl;
-        // }
-
-        // check for gzip
-        bool hasGzip = false;
-
-        // check for every single encoding
-        for (const auto& encoding : compressionSchemes) {
-          if (strcmp(encoding.c_str(), "gzip") == 0) {
-            hasGzip = true;
-          }
-        }
-        if (hasGzip) {
-          std::string body = gzipCompress(contentStr);
-          response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Encoding: gzip\r\nContent-Length: " +  std::to_string(body.size()) + "\r\n\r\n";
-          send(client_fd, response.c_str(), strlen(response.c_str()), 0);
-          send(client_fd, body.data(), body.size(), 0);
-          return;
-        }
-        else {
-          response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n";
-        }
-      }
-      else {
-        if (closeConnection) {
-          response = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n\r\n" + contentStr;
-        }
-        else {
-          response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(contentStr.length()) + "\r\n\r\n" + contentStr;
-        }
-      }
-      send(client_fd, response.c_str(), strlen(response.c_str()), 0);
-    }
-    else if (isUserAgent) {
-      if (closeConnection) {
-        response = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(userAgentContent.length()) + "\r\n\r\n" + userAgentContent;
-
-      } else {
-        response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(userAgentContent.length()) + "\r\n\r\n" + userAgentContent;
-      }
-      send(client_fd, response.c_str(), strlen(response.c_str()), 0);
-    }
-    else if (isFileRequest) {
-      // try to open the file
-      // if the file exists, provide proper 200 OK response with file content
-      // else, return 404 Not Found error
-      std::string fullPath = fileDirectory + fileName;
-      std::ifstream file(fullPath);
-
-      if (!file) {
-        // send a 404 error
-        response = "HTTP/1.1 404 Not Found\r\n\r\n";
-        send(client_fd, response.c_str(), strlen(response.c_str()), 0);
-      }
-      else {
-        // determine the file size using the path of the file; uses the filesystem library
-        auto size = std::filesystem::file_size(fullPath);
-
-        // read the content of the file and store it in the buffer, use ifstream instance 'file' here
-        std::stringstream buffer;
-        buffer << file.rdbuf();
-
-        // send 200 OK with different headers and file content
-        response = "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: " + std::to_string(size) + "\r\n\r\n" + buffer.str();
-        send(client_fd, response.c_str(), strlen(response.c_str()), 0);
-      }
-
-      file.close();
-
-    }
-    else if (reqString == rootStr) {
-      if (closeConnection) {
-        response = "HTTP/1.1 200 OK\r\nConnection: close\r\n\r\n";
-      }
-      else {
-        response = "HTTP/1.1 200 OK\r\n\r\n";
-      }
-      send(client_fd, response.c_str(), strlen(response.c_str()), 0);
-    }
-    // else, send the error message
-    else {
-      response = "HTTP/1.1 404 Not Found\r\n\r\n";
-      send(client_fd, response.c_str(), strlen(response.c_str()), 0);
-    }
-  }
-  else if (isPOST) {
-    // check if it is a file request
-    if (isFileRequest) {
-      // extract content to add to the file from the request stirng
-      int startIdx = bufferStr.find_last_of("\r\n");
-      int endIdx = bufferStr.length() - 1;
-      std::string fileContent = bufferStr.substr(startIdx + 1, endIdx - startIdx);
-
-      // create the file using the file path
-      std::string fullPath = fileDirectory + fileName;
-      std::ofstream outFile(fullPath);
-
-      if (outFile) {
-        // write to the file
-        outFile << fileContent;
-
-        // close the file
-        outFile.close();
-
-        // response string
-        response = "HTTP/1.1 201 Created\r\n\r\n";
-      }
-      else {
-        response = "HTTP/1.1 500 Internal Server Error\r\n\r\n";
-      }
-      send(client_fd, response.c_str(), strlen(response.c_str()), 0);
-    }
-  }
-
-  //close(client_fd);
-
-  // display the request string for debugging
-  std::cout << "Request string: " << bufferStr << std::endl << std::endl;
+// Checks for the presence of a specific header
+bool checkHeaderPresence(const std::string& bufferStr, const std::string& header) {
+  return bufferStr.find(header) != std::string::npos;
 }
 
+// Extracts value of a header (e.g., "User-Agent")
+std::string extractHeaderValue(const std::string& bufferStr, const std::string& header) {
+  int start = bufferStr.find(header);
+  if (start == std::string::npos) return "";
+  start += header.size();
+  int end = bufferStr.find("\r\n", start);
+  if (end == std::string::npos) return "";
+  std::string value = bufferStr.substr(start, end - start);
+  size_t firstChar = value.find_first_not_of(" ");
+  return (firstChar != std::string::npos) ? value.substr(firstChar) : "";
+}
+
+// Parses Accept-Encoding header into a vector of encodings
+std::vector<std::string> parseCompressionSchemes(const std::string& bufferStr) {
+  std::vector<std::string> encodings;
+  std::string raw = extractHeaderValue(bufferStr, "Accept-Encoding:");
+  std::stringstream ss(raw);
+  std::string item;
+  while (std::getline(ss, item, ',')) {
+    size_t start = item.find_first_not_of(" ");
+    if (start != std::string::npos) encodings.push_back(item.substr(start));
+  }
+  return encodings;
+}
+
+// Extracts file content from POST request body
+std::string extractFileContent(const std::string& bufferStr) {
+  int bodyStart = bufferStr.find("\r\n\r\n");
+  return (bodyStart != std::string::npos) ? bufferStr.substr(bodyStart + 4) : "";
+}
+
+// Builds a basic HTTP response with optional close header
+std::string buildHttpResponse(const std::string& body, const std::string& contentType = "text/plain", bool close = false, const std::string& encoding = "") {
+  std::string response = "HTTP/1.1 200 OK\r\n";
+  if (!encoding.empty()) response += "Content-Encoding: " + encoding + "\r\n";
+  if (close) response += "Connection: close\r\n";
+  response += "Content-Type: " + contentType + "\r\n";
+  response += "Content-Length: " + std::to_string(body.size()) + "\r\n\r\n" + body;
+  return response;
+}
+
+// Handles a single client request
+void handleRequest(const std::string& bufferStr, int client_fd, bool& closeConnection) {
+  std::string method = bufferStr.substr(0, bufferStr.find(" "));
+  std::string path = bufferStr.substr(bufferStr.find(" ") + 1);
+  path = path.substr(0, path.find(" "));
+
+  bool isGET = (method == "GET");
+  bool isPOST = (method == "POST");
+  closeConnection = checkHeaderPresence(bufferStr, "Connection: close");
+
+  std::vector<std::string> encodings = parseCompressionSchemes(bufferStr);
+  bool gzipAccepted = std::find(encodings.begin(), encodings.end(), "gzip") != encodings.end();
+
+  std::string response;
+
+  if (isGET) {
+    if (path.find("/echo/") == 0) {
+      std::string msg = path.substr(6);
+      if (gzipAccepted) {
+        std::string compressed = gzipCompress(msg);
+        std::string header = "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(compressed.size()) + "\r\n\r\n";
+        send(client_fd, header.c_str(), header.length(), 0);
+        send(client_fd, compressed.data(), compressed.size(), 0);
+        return;
+      }
+      response = buildHttpResponse(msg, "text/plain", closeConnection);
+    } else if (path == "/user-agent") {
+      std::string userAgent = extractHeaderValue(bufferStr, "User-Agent:");
+      response = buildHttpResponse(userAgent, "text/plain", closeConnection);
+    } else if (path.find("/files/") == 0) {
+      std::string filename = path.substr(7);
+      std::ifstream file(fileDirectory + filename);
+      if (!file) {
+        response = "HTTP/1.1 404 Not Found\r\n\r\n";
+      } else {
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        response = buildHttpResponse(buffer.str(), "application/octet-stream", closeConnection);
+      }
+    } else if (path == "/") {
+      response = buildHttpResponse("", "text/plain", closeConnection);
+    } else {
+      response = "HTTP/1.1 404 Not Found\r\n\r\n";
+    }
+  } else if (isPOST && path.find("/files/") == 0) {
+    std::string filename = path.substr(7);
+    std::ofstream outFile(fileDirectory + filename);
+    if (outFile) {
+      outFile << extractFileContent(bufferStr);
+      response = "HTTP/1.1 201 Created\r\n\r\n";
+    } else {
+      response = "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+    }
+  }
+
+  send(client_fd, response.c_str(), response.size(), 0);
+  std::cout << "Request string: " << bufferStr << "\n\n";
+}
+
+// Handles the lifecycle of a client connection
 void handleClient(int client_fd) {
   while (true) {
-    // buffer stores the HTTP request string
     char buffer[4096] = {0};
-    // receives the HTTP request and stores in buffer, also stores the bytes received in bytesReceived
-    size_t bytesReceived = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
-
-    // client closed the connection
-    if (bytesReceived <= 0) {
-      break;
-    }
-
-    // converts char array to string
+    int bytesReceived = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
+    if (bytesReceived <= 0) break;
     std::string bufferStr(buffer);
-
-    // check for "Connection: close" header
-    bool closeConnection = bufferStr.find("Connection: close") != std::string::npos;
-
-    // handle the request
+    bool closeConnection = false;
     handleRequest(bufferStr, client_fd, closeConnection);
-
-    // close the connection if "Connection: close" is found
-    if (closeConnection) {
-      break;
-    }
+    if (closeConnection) break;
   }
   close(client_fd);
 }
 
-
-
+// Entry point for the server
 int main(int argc, char **argv) {
-
-  // Parse command-line arguments
   for (int i = 1; i < argc - 1; ++i) {
     if (std::string(argv[i]) == "--directory") {
-        fileDirectory = argv[i + 1];
-        break;
+      fileDirectory = argv[i + 1];
+      break;
     }
   }
 
-  // Flush after every std::cout / std::cerr
   std::cout << std::unitbuf;
   std::cerr << std::unitbuf;
-
-  // You can use print statements as follows for debugging, they'll be visible when running tests.
   std::cout << "Logs from your program will appear here!\n";
 
-  // Uncomment this block to pass the first stage
-  //
-  // Server File Descriptor
   int server_fd = socket(AF_INET, SOCK_STREAM, 0);
-  if (server_fd < 0) {
-   std::cerr << "Failed to create server socket\n";
-   return 1;
-  }
+  if (server_fd < 0) return 1;
 
-  // Since the tester restarts your program quite often, setting SO_REUSEADDR
-  // ensures that we don't run into 'Address already in use' errors
   int reuse = 1;
-  if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0) {
-    std::cerr << "setsockopt failed\n";
-    return 1;
-  }
+  setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
 
-  struct sockaddr_in server_addr;
+  sockaddr_in server_addr{};
   server_addr.sin_family = AF_INET;
   server_addr.sin_addr.s_addr = INADDR_ANY;
   server_addr.sin_port = htons(4221);
 
-  if (bind(server_fd, (struct sockaddr *) &server_addr, sizeof(server_addr)) != 0) {
-    std::cerr << "Failed to bind to port 4221\n";
-    return 1;
-  }
+  if (bind(server_fd, (sockaddr*)&server_addr, sizeof(server_addr)) != 0) return 1;
+  if (listen(server_fd, 5) != 0) return 1;
 
-  int connection_backlog = 5;
-  if (listen(server_fd, connection_backlog) != 0) {
-    std::cerr << "listen failed\n";
-    return 1;
-  }
+  sockaddr_in client_addr;
+  socklen_t client_len = sizeof(client_addr);
 
-  struct sockaddr_in client_addr;
-  int client_addr_len = sizeof(client_addr);
-
-  std::cout << "Waiting for a client to connect...\n";
-
-  while(true)  {
-    // Client file descriptor
-    int client_fd = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
-    std::cout << "Client connected\n";
-
-    std::thread t([client_fd] {
-      handleClient(client_fd);
-    });
+  while (true) {
+    int client_fd = accept(server_fd, (sockaddr*)&client_addr, &client_len);
+    std::thread t([client_fd] { handleClient(client_fd); });
     t.detach();
   }
+
   close(server_fd);
   return 0;
 }
