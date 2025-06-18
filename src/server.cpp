@@ -1,4 +1,3 @@
-// Refactored C++ HTTP server in a single .cpp file with reusable helper functions
 #include <iostream>
 #include <cstdlib>
 #include <string>
@@ -97,6 +96,7 @@ void handleRequest(const std::string& bufferStr, int client_fd, bool& closeConne
   std::vector<std::string> encodings = parseCompressionSchemes(bufferStr);
   bool gzipAccepted = std::find(encodings.begin(), encodings.end(), std::string("gzip")) != encodings.end();
 
+  // stores the response string
   std::string response;
 
   if (isGET) {
